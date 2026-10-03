@@ -30,9 +30,41 @@ export function discard(name) {
 
 export const anyDirty = () => Object.values(store.files).some(f => f.dirty);
 
-function updateDirty() {
-  document.getElementById('dirty-note').hidden = !anyDirty();
+export const dirtyFiles = () => Object.keys(store.files).filter(n => store.files[n].dirty).sort();
+
+// What to save for a file: edited text (Settings/Files tabs) or the edited structure (everything else).
+export function bodyFor(name) {
+  const f = store.files[name];
+  return f.draft != null && f.draft !== f.text ? {text: f.draft} : {data: f.model};
 }
+
+export function updateDirty() {
+  const n = dirtyFiles().length;
+  const btn = document.getElementById('save-all');
+  btn.hidden = !n;
+  btn.textContent = `Save… (${n})`;
+  btn.title = `Unsaved changes in: ${dirtyFiles().join(', ')}`;
+}
+
+// Header "Save…" button: every file with unsaved changes, each with Review & Save.
+export function openSaveDialog() {
+  const m = modal('Unsaved changes', {narrow: true});
+  const draw = () => {
+    const names = dirtyFiles();
+    if (!names.length) { m.close(); return; }
+    m.body.replaceChildren(h('p', {class: 'muted'}, 'These files have changes that are not on your Homepage yet. Each save shows exactly what changes first.'),
+      h('div', {class: 'list'}, names.map(name => h('div', {class: 'list-row'}, h('div', {class: 'grow'}, h('b', {}, name)),
+        h('button', {class: 'ghost small', onclick: () => {
+          const f = store.files[name];
+          f.model = clone(f.data); f.draft = null; f.dirty = false; updateDirty(); draw(); refreshView();
+        }}, 'Discard'),
+        h('button', {class: 'small', onclick: async () => { if (await reviewAndSave(name, bodyFor(name))) { draw(); refreshView(); } }}, 'Review & Save')))));
+  };
+  draw();
+}
+
+// Re-render whichever tab is showing, so it reflects saves made from the header.
+export const refreshView = () => document.querySelector('#tabs button.active')?.click();
 
 window.addEventListener('beforeunload', e => { if (anyDirty()) e.preventDefault(); });
 
@@ -70,6 +102,7 @@ export async function reviewAndSave(name, body = {data: store.files[name].model}
         const r = await api(`/api/save/${encodeURIComponent(name)}`, {json: {...body, baseMtime: f?.exists ? f.mtime : undefined}});
         saved = r.saved;
         await loadFile(name, true);
+        updateDirty();
         toast(`Saved ${name}${r.backup ? ' (backup made)' : ''}`);
         reloadPreview();
         m.close();

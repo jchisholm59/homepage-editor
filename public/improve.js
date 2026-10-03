@@ -1,7 +1,7 @@
 // "Make it better": a checkup of the whole dashboard with one-click fixes. Fixes only change the
 // working copy; nothing is written until you Review & Save (with a diff).
 import {h, api, toast, iconUrl, suggestWidget, firstKey, YAML} from './lib.js';
-import {store, loadFile, markDirty, reviewAndSave} from './store.js';
+import {store, loadFile, markDirty, reviewAndSave, updateDirty} from './store.js';
 import {pickIcon, iconIndex, localIconsServed, LOCAL_ICON_FIX} from './icons.js';
 import {openEntryEditor} from './services.js';
 import {BUTTON_JS, hasButton} from './editor-button.js';
@@ -124,7 +124,7 @@ export async function renderImprove(root) {
         const r = await api('/api/preview/settings.yaml', {json: {data: merged}});
         const f = store.files['settings.yaml'];
         f.draft = r.text; f.dirty = r.text !== f.text;
-        document.getElementById('dirty-note').hidden = false;
+        updateDirty();
         toast('Layout preset added to settings (not saved yet)');
         redraw();
       } catch (err) { toast(err.message, true); }

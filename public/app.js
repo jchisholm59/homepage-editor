@@ -1,6 +1,6 @@
 // Entry point: tabs, preview panel, startup.
 import {api, toast, confirmBox} from './lib.js';
-import {store, loadFile} from './store.js';
+import {store, loadFile, openSaveDialog} from './store.js';
 import {renderGroupsView} from './services.js';
 import {renderImprove} from './improve.js';
 import {renderAppearance} from './appearance.js';
@@ -28,6 +28,8 @@ async function show(name) {
     toast(e.message, true);
   }
 }
+
+document.getElementById('save-all').addEventListener('click', openSaveDialog);
 
 document.getElementById('tabs').addEventListener('click', e => {
   if (e.target.dataset.view) show(e.target.dataset.view);

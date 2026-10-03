@@ -1,7 +1,7 @@
 // Info widgets, the settings explorer, raw file editing and backups.
 import Sortable from '/vendor/sortable/sortable.esm.js';
 import {h, api, modal, toast, confirmBox, markdown, renderDiff, clone, firstKey, YAML} from './lib.js';
-import {store, loadFile, markDirty, discard, reviewAndSave} from './store.js';
+import {store, loadFile, markDirty, discard, reviewAndSave, updateDirty} from './store.js';
 
 // ---- Info widgets (widgets.yaml): a list of {type: options} ---------------------------------
 export async function renderInfoWidgets(root) {
@@ -77,6 +77,10 @@ let settingsSection = null;
 export async function renderSettings(root) {
   const name = 'settings.yaml';
   const file = await loadFile(name);
+  if (file.dirty && file.draft == null) {
+    return root.replaceChildren(h('div', {class: 'banner'}, 'You have unsaved changes from the Appearance page. ',
+      'Save or discard them first (orange Save… button, top right), then come back here to edit settings.yaml as text.'));
+  }
   file.draft ??= file.text;
   const ta = h('textarea', {rows: 18, spellcheck: 'false', oninput: () => { file.draft = ta.value; file.dirty = file.draft !== file.text; validate(); updateButtons(); }});
   ta.value = file.draft;
@@ -160,9 +164,7 @@ function deepMerge(a, b) {
 
 const safeParse = t => { try { return YAML.parse(t); } catch { return null; } };
 
-function markDirtyNote() {
-  document.getElementById('dirty-note').hidden = !Object.values(store.files).some(f => f.dirty);
-}
+const markDirtyNote = updateDirty;
 
 // ---- Files: edit any config file as text ---------------------------------------------------
 export async function renderFiles(root, selected) {

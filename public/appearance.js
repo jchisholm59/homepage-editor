@@ -1,7 +1,7 @@
 // Appearance: theme, colour palette, background image and filters, card and header styles, with a
 // mock-up that uses Homepage's own palette values and layering (bg colour, image, overlay, filters).
 import {h, api, toast, modal, iconUrl, iconImg, clone, firstKey, YAML} from './lib.js';
-import {store, loadFile, reviewAndSave} from './store.js';
+import {store, loadFile, reviewAndSave, updateDirty} from './store.js';
 import {iconIndex, refreshLocalIcons} from './icons.js';
 
 const BLUR = {'': 'None', xs: 'Extra small', sm: 'Small', md: 'Medium', lg: 'Large', xl: 'Extra large', '2xl': '2× large', '3xl': '3× large'};
@@ -19,12 +19,13 @@ const HEADER_STYLES = {
 export async function renderAppearance(root) {
   const file = await loadFile('settings.yaml');
   let parsed;
-  try { parsed = YAML.parse(file.draft ?? file.text) ?? {}; } catch (e) {
+  // Unsaved Appearance changes from an earlier visit live in file.model (file.draft is the Settings tab's text).
+  try { parsed = file.dirty && file.draft == null ? clone(file.model) : YAML.parse(file.draft ?? file.text) ?? {}; } catch (e) {
     return root.replaceChildren(h('div', {class: 'banner'}, 'settings.yaml has a YAML error; fix it on the Settings tab first: ', e.message));
   }
   await loadFile('services.yaml');
   const s = clone(parsed);
-  const original = JSON.stringify(parsed);
+  const original = JSON.stringify(file.data ?? {});   // compare with what's saved, not where this visit started
   const bg = () => (typeof s.background === 'object' && s.background ? s.background : {image: s.background ?? ''});
   const setBg = patch => {
     const next = {...bg(), ...patch};
@@ -40,13 +41,19 @@ export async function renderAppearance(root) {
   const saveBtn = h('button', {onclick: async () => {
     if (await reviewAndSave('settings.yaml', {data: s})) { store.files['settings.yaml'].draft = null; renderAppearance(root); }
   }}, 'Review & Save');
-  const resetBtn = h('button', {class: 'ghost', onclick: () => renderAppearance(root)}, 'Undo changes');
+  const resetBtn = h('button', {class: 'ghost', onclick: () => {
+    file.model = clone(file.data); file.draft = null; file.dirty = false; updateDirty(); renderAppearance(root);
+  }}, 'Undo changes');
   const controls = h('div', {class: 'appearance-controls'});
   function update() {
     drawMock(mock, s);
     const changed = JSON.stringify(s) !== original;
     saveBtn.disabled = !changed;
     resetBtn.hidden = !changed;
+    // Share the pending change with the header Save… button (saved as a merge, keeping comments).
+    if (changed) { file.model = clone(s); file.draft = null; }
+    file.dirty = changed;
+    updateDirty();
     drawControls();
   }
 

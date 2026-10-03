@@ -37,7 +37,7 @@ nav { display: flex; gap: 4px; flex-wrap: wrap; }
 nav button { background: transparent; color: var(--muted); }
 nav button.active { background: var(--panel2); color: var(--text); }
 .header-actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-.dirty-note { color: var(--warn); font-size: 12px; }
+.save-all { background: var(--warn); color: #241a05; font-weight: 600; }
 
 #layout { display: flex; min-height: calc(100vh - 54px); }
 main { flex: 1; padding: 16px; min-width: 0; }
