@@ -84,5 +84,5 @@ export async function reviewAndSave(name, body = {data: store.files[name].model}
 
 export function reloadPreview() {
   const f = document.getElementById('preview-frame');
-  if (f.src) f.src = f.src;
+  if (f.getAttribute('src')) document.getElementById('preview-reload').click();
 }

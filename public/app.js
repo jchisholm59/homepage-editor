@@ -36,14 +36,32 @@ document.getElementById('tabs').addEventListener('click', e => {
 const preview = document.getElementById('preview');
 const frame = document.getElementById('preview-frame');
 const toggle = document.getElementById('preview-toggle');
+// Load the preview explicitly (an empty iframe's .src differs between browsers, so don't rely on it),
+// and say what's happening in the panel instead of leaving it blank.
+const previewStatus = document.getElementById('preview-status');
+let previewTimer;
+function loadPreview() {
+  previewStatus.hidden = false;
+  previewStatus.textContent = `Loading ${store.info.homepageUrl} …`;
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => {
+    previewStatus.textContent = `Homepage hasn't finished loading here after 15 s. Use "Open ↗" to view it in its own tab, and tell Claude what this panel shows.`;
+  }, 15000);
+  frame.src = `${store.info.homepageUrl}/?editor-preview=${Date.now()}`;
+}
+frame.addEventListener('load', () => {
+  if (!frame.getAttribute('src')) return;
+  clearTimeout(previewTimer);
+  previewStatus.hidden = true;
+});
 function setPreview(on) {
   preview.hidden = !on;
   toggle.textContent = on ? 'Preview ◂' : 'Preview ▸';
-  if (on && !frame.src) frame.src = store.info.homepageUrl;
+  if (on && !frame.getAttribute('src')) loadPreview();
   try { localStorage.setItem('preview', on ? '1' : ''); } catch {}
 }
 toggle.addEventListener('click', () => setPreview(preview.hidden));
-document.getElementById('preview-reload').addEventListener('click', () => { frame.src = store.info.homepageUrl; });
+document.getElementById('preview-reload').addEventListener('click', loadPreview);
 
 (async () => {
   [store.info, store.catalog] = await Promise.all([api('/api/info'), api('/api/catalog')]);
@@ -58,7 +76,7 @@ document.getElementById('preview-reload').addEventListener('click', () => { fram
     try {
       await api('/api/restart-homepage', {json: {}});
       toast('Homepage restarted');
-      setTimeout(() => { if (frame.src) frame.src = store.info.homepageUrl; }, 4000);
+      setTimeout(() => { if (frame.getAttribute('src')) loadPreview(); }, 4000);
     } catch (e) { toast(e.message, true); }
     restart.disabled = false; restart.textContent = 'Restart Homepage';
   });
