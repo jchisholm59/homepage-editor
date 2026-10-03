@@ -4,6 +4,7 @@ import {h, api, toast, iconUrl, suggestWidget, firstKey, YAML} from './lib.js';
 import {store, loadFile, markDirty, reviewAndSave} from './store.js';
 import {pickIcon, iconIndex, localIconsServed, LOCAL_ICON_FIX} from './icons.js';
 import {openEntryEditor} from './services.js';
+import {BUTTON_JS, hasButton} from './editor-button.js';
 
 const SECRET = /(^|_)(key|apikey|password|pass|token|secret)$|apiKey|password|token|secret/i;
 
@@ -50,6 +51,15 @@ export async function renderImprove(root) {
   const all = [...entries('services'), ...entries('bookmarks')];
   const row = (e, text, ...buttons) => h('div', {class: 'list-row'},
     h('div', {class: 'grow'}, h('b', {}, e.name), ' ', h('span', {class: 'muted'}, `${e.kind === 'bookmarks' ? 'bookmark · ' : ''}${e.group}`), text ? h('div', {class: 'hint'}, text) : null), ...buttons);
+
+  // 0. The Edit button on Homepage itself (custom.js)
+  const custom = await loadFile('custom.js', true);
+  add('Edit button on your Homepage', 'A small "Edit" button at the top right of Homepage that opens this editor in its own window.',
+    hasButton(custom.text) ? [] : [h('div', {class: 'list-row'}, h('div', {class: 'grow'}, h('b', {}, 'Missing'), h('div', {class: 'hint'}, 'custom.js doesn\'t have the button block.')),
+      h('button', {class: 'small', onclick: async () => {
+        const text = `${custom.text.replace(/\s*$/, '')}${custom.text.trim() ? '\n\n' : ''}${BUTTON_JS}`;
+        if (await reviewAndSave('custom.js', {text})) redraw();
+      }}, 'Add it back'))]);
 
   // 1. Icons
   if (!iconOk.size) sections.append(h('p', {class: 'muted'}, 'Checking icons…'));
