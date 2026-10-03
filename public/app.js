@@ -1,13 +1,15 @@
 // Entry point: tabs, preview panel, startup.
-import {api, toast} from './lib.js';
+import {api, toast, confirmBox} from './lib.js';
 import {store, loadFile} from './store.js';
 import {renderGroupsView} from './services.js';
 import {renderImprove} from './improve.js';
+import {renderAppearance} from './appearance.js';
 import {renderInfoWidgets, renderSettings, renderFiles, renderBackups} from './views.js';
 
 const view = document.getElementById('view');
 const views = {
   improve: () => renderImprove(view),
+  appearance: () => renderAppearance(view),
   services: () => renderGroupsView(view, 'services'),
   bookmarks: () => renderGroupsView(view, 'bookmarks'),
   widgets: () => renderInfoWidgets(view),
@@ -48,6 +50,18 @@ document.getElementById('preview-reload').addEventListener('click', () => { fram
   document.getElementById('hp-version').textContent = `for Homepage ${store.catalog.homepageVersion}`;
   document.getElementById('preview-open').href = store.info.homepageUrl;
   await loadFile('docker.yaml').catch(() => {});
+  const restart = document.getElementById('restart-homepage');
+  restart.hidden = !store.info.canRestart;
+  restart.addEventListener('click', async () => {
+    if (!await confirmBox('Restart Homepage', 'Homepage only picks up newly added icons and background images after a restart. It takes about 10 seconds.', 'Restart')) return;
+    restart.disabled = true; restart.textContent = 'Restarting…';
+    try {
+      await api('/api/restart-homepage', {json: {}});
+      toast('Homepage restarted');
+      setTimeout(() => { if (frame.src) frame.src = store.info.homepageUrl; }, 4000);
+    } catch (e) { toast(e.message, true); }
+    restart.disabled = false; restart.textContent = 'Restart Homepage';
+  });
   let tab = 'improve', prev = '';
   try { tab = localStorage.getItem('tab') || tab; prev = localStorage.getItem('preview'); } catch {}
   if (prev) setPreview(true);

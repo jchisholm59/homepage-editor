@@ -99,7 +99,19 @@ function sections(file, page) {
   return {title: front.title ?? page, doc: `${SITE}/configs/${page}/`, sections: out};
 }
 
+// Colour palettes (theme-<name> classes) with their RGB shades, for the Appearance page swatches.
+function palettes() {
+  const css = fs.readFileSync(path.join(src, 'src', 'styles', 'theme.css'), 'utf8');
+  const out = {};
+  for (const m of css.matchAll(/^\.theme-([a-z]+)\s*\{([^}]*)\}/gm)) {
+    const shades = Object.fromEntries([...m[2].matchAll(/--color-(\d+):\s*([\d ]+);/g)].map(x => [x[1], x[2].trim()]));
+    if (Object.keys(shades).length) out[m[1]] = shades;
+  }
+  return out;
+}
+
 const catalog = {
+  palettes: palettes(),
   homepageVersion: version,
   generated: new Date().toISOString().slice(0, 10),
   serviceWidgets: widgetDocs(path.join(docs, 'widgets', 'services'), 'service'),

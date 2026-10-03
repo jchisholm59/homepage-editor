@@ -13,6 +13,9 @@ const CONFIG_DIR = process.env.CONFIG_DIR ?? '/config';
 const BACKUP_DIR = process.env.BACKUP_DIR ?? '/backups';
 const HOMEPAGE_URL = (process.env.HOMEPAGE_URL ?? 'http://192.168.2.210:3000').replace(/\/$/, '');
 const PASSWORD = process.env.EDITOR_PASSWORD ?? '';
+// Restart-only Docker API proxy (docker-socket-proxy with POST + ALLOW_RESTARTS), optional.
+const DOCKER_PROXY = (process.env.DOCKER_PROXY ?? '').replace(/\/$/, '');
+const HOMEPAGE_CONTAINER = process.env.HOMEPAGE_CONTAINER ?? 'homepage';
 const ICON_DIR = path.join(CONFIG_DIR, 'icons');
 const here = path.dirname(new URL(import.meta.url).pathname);
 const catalog = JSON.parse(fs.readFileSync(path.join(here, 'catalog', 'catalog.json'), 'utf8'));
@@ -84,6 +87,20 @@ function render(name, body) {
 
 app.get('/api/info', (req, res) => res.json({
   homepageUrl: HOMEPAGE_URL, homepageVersion: catalog.homepageVersion, password: Boolean(PASSWORD),
+  canRestart: Boolean(DOCKER_PROXY),
+}));
+
+// Homepage rebuilds its page when its config hash changes; ask it to do so right away.
+function revalidateHomepage() {
+  fetch(`${HOMEPAGE_URL}/api/revalidate`, {signal: AbortSignal.timeout(10000)}).catch(() => {});
+}
+
+// New icons/background images are only served after Homepage restarts (Next.js static files).
+app.post('/api/restart-homepage', wrap(async (req, res) => {
+  if (!DOCKER_PROXY) throw fail(400, 'Restarting is not set up (no DOCKER_PROXY)');
+  const r = await fetch(`${DOCKER_PROXY}/containers/${encodeURIComponent(HOMEPAGE_CONTAINER)}/restart?t=5`, {method: 'POST', signal: AbortSignal.timeout(60000)});
+  if (r.status !== 204) throw fail(502, `Docker said HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  res.json({restarted: true});
 }));
 
 app.get('/api/catalog', (req, res) => res.json(catalog));
@@ -116,6 +133,7 @@ app.post('/api/save/:name', wrap(async (req, res) => {
   const backup = backupFile(name, current);
   // Write in place (not rename) so the file keeps its owner and permissions.
   fs.writeFileSync(configPath(name), text);
+  revalidateHomepage();
   res.json({saved: true, backup, mtime: fs.statSync(configPath(name)).mtimeMs});
 }));
 
@@ -159,6 +177,7 @@ app.post('/api/restore/:id/:name', wrap(async (req, res) => {
   if (!fs.existsSync(p)) throw fail(404, 'No such backup');
   const backup = backupFile(name, readFile(name));
   fs.writeFileSync(configPath(name), fs.readFileSync(p, 'utf8'));
+  revalidateHomepage();
   res.json({restored: true, backup});
 }));
 
@@ -213,7 +232,7 @@ const IMAGE_TYPES = {'image/png': 'png', 'image/svg+xml': 'svg', 'image/webp': '
 function storeIcon(name, buf, type) {
   const ext = IMAGE_TYPES[type?.split(';')[0].trim()];
   if (!ext) throw fail(400, `Not an image (${type || 'unknown type'})`);
-  if (buf.length > 2e6) throw fail(400, 'Icon is over 2 MB');
+  if (buf.length > 15e6) throw fail(400, 'Image is over 15 MB');
   const base = safeIconName(name.replace(/\.[a-z0-9]+$/i, '')) || 'icon';
   fs.mkdirSync(ICON_DIR, {recursive: true});
   const file = `${base}.${ext}`;
@@ -231,7 +250,7 @@ app.post('/api/icons/fetch', wrap(async (req, res) => {
   res.json({file, ref: `/icons/${file}`});
 }));
 
-app.post('/api/icons/upload', express.raw({type: 'image/*', limit: '2mb'}), wrap(async (req, res) => {
+app.post('/api/icons/upload', express.raw({type: 'image/*', limit: '15mb'}), wrap(async (req, res) => {
   const file = storeIcon(String(req.query.name ?? 'icon'), req.body, req.headers['content-type']);
   res.json({file, ref: `/icons/${file}`});
 }));
