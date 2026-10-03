@@ -1,0 +1,16 @@
+# Homepage Editor on granite: edits Homepage's config in place (same folder Homepage mounts).
+#   docker compose up -d --build
+services:
+  homepage-editor:
+    build: .
+    container_name: homepage-editor
+    restart: unless-stopped
+    ports:
+      - "7200:7200"
+    environment:
+      HOMEPAGE_URL: http://192.168.2.210:3000
+      # Optional password (any user name): put EDITOR_PASSWORD=... in a .env file next to this one.
+      EDITOR_PASSWORD: ${EDITOR_PASSWORD:-}
+    volumes:
+      - /root/homepage/config:/config
+      - /root/homepage/editor-backups:/backups

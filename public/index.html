@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homepage Editor</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%2371c9a6' d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">Homepage Editor <span id="hp-version" class="muted"></span></div>
+    <nav id="tabs">
+      <button data-view="improve" class="active">Make it better</button>
+      <button data-view="services">Services</button>
+      <button data-view="bookmarks">Bookmarks</button>
+      <button data-view="widgets">Info Widgets</button>
+      <button data-view="settings">Settings</button>
+      <button data-view="files">Files</button>
+      <button data-view="backups">Backups</button>
+    </nav>
+    <div class="header-actions">
+      <span id="dirty-note" class="dirty-note" hidden>Unsaved changes</span>
+      <button id="preview-toggle" class="ghost" title="Show your Homepage beside the editor">Preview ▸</button>
+    </div>
+  </header>
+  <div id="layout">
+    <main id="view"></main>
+    <aside id="preview" hidden>
+      <div class="preview-bar">
+        <span>Live Homepage</span>
+        <span>
+          <button id="preview-reload" class="ghost small" title="Reload">⟳</button>
+          <a id="preview-open" class="ghost small" target="_blank" rel="noopener">Open ↗</a>
+        </span>
+      </div>
+      <iframe id="preview-frame" title="Homepage preview"></iframe>
+    </aside>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
