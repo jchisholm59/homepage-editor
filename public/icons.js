@@ -10,8 +10,11 @@ export async function iconIndex() {
   return index;
 }
 
+// Only a positive answer is remembered: "not served" must be re-checked, since it's fixed by a
+// change made outside the editor (an old cached "no" once told the user to redo that change).
 export async function localIconsServed() {
-  served ??= await api('/api/icons/served').catch(() => ({served: null}));
+  if (served?.served) return served;
+  served = await api('/api/icons/served').catch(() => ({served: null}));
   return served;
 }
 
