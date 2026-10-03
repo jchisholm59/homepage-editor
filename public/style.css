@@ -177,3 +177,5 @@ aside#preview { width: 46%; border-left: 1px solid var(--line); display: flex; f
 .header-style.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 input[type=range] { padding: 0; accent-color: var(--accent); }
 @media (max-width: 900px) { .appearance { grid-template-columns: 1fr; } .mock-wrap { position: static; } }
+
+.req { color: var(--warn); }

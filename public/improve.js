@@ -3,7 +3,7 @@
 import {h, api, toast, iconUrl, suggestWidget, firstKey, YAML} from './lib.js';
 import {store, loadFile, markDirty, reviewAndSave, updateDirty} from './store.js';
 import {pickIcon, iconIndex, localIconsServed, LOCAL_ICON_FIX} from './icons.js';
-import {openEntryEditor} from './services.js';
+import {openEntryEditor, widgetProblems} from './services.js';
 import {BUTTON_JS, hasButton} from './editor-button.js';
 
 const SECRET = /(^|_)(key|apikey|password|pass|token|secret)$|apiKey|password|token|secret/i;
@@ -83,6 +83,15 @@ export async function renderImprove(root) {
   add('Icons', 'Broken or missing icons. Your own images live in config/icons and are referenced as /icons/<file>.', iconRows);
   if (served.served === false) sections.lastChild.append(h('div', {class: 'banner'}, h('b', {}, 'One-time fix needed for your own icons: '),
     'Homepage isn\'t serving config/icons yet, so /icons/… references stay broken until this is done (on granite):', h('pre', {}, LOCAL_ICON_FIX)));
+
+  // 1b. Widgets that can't work (missing url) or may not (missing key/login)
+  const broken = entries('services').map(e => ({e, pr: widgetProblems(e.props)})).filter(x => x.pr.missing.length || x.pr.usual.length);
+  add('Widget problems', 'Widgets missing settings they need. These show "API Error" on your Homepage.', broken.map(({e, pr}) => {
+    const fixUrl = pr.missing.includes('url') && e.props.href ? (() => { try { return new URL(e.props.href).origin; } catch { return null; } })() : null;
+    return row(e, `${e.props.widget.type} widget: ${[...pr.missing.map(k => `no ${k}`), ...pr.usual.map(k => `no ${k} (usually needed)`)].join(', ')}.`,
+      fixUrl ? h('button', {class: 'small', title: 'Use the same address the card links to', onclick: () => { e.props.widget.url = fixUrl; touched('services'); }}, `Use ${fixUrl}`) : null,
+      h('button', {class: 'ghost small', onclick: () => openEntryEditor('services', e.list, e.index, () => touched('services'), {widget: e.props.widget.type})}, 'Edit'));
+  }));
 
   // 2. Live widgets
   const widgetRows = entries('services').filter(e => !e.props.widget && !e.props.widgets).map(e => ({e, s: suggestWidget(store.catalog, e.name, e.props)}))

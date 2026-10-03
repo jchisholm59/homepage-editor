@@ -275,9 +275,15 @@ function editEntry(kind, list, index, changed, opts = {}) {
     }}, 'Delete'),
     h('span', {class: 'spacer'}),
     h('button', {class: 'ghost', onclick: () => m.close()}, 'Cancel'),
-    h('button', {onclick: () => {
+    h('button', {onclick: async () => {
       if (current === 'yaml' && !applyYaml()) return;
       if (!name.trim()) return toast('A name is needed', true);
+      const problems = kind === 'services' ? widgetProblems(p) : {missing: [], usual: []};
+      if (problems.missing.length) {
+        show('widget');
+        return toast(`The ${p.widget.type} widget needs: ${problems.missing.join(', ')}. Fill it in, or remove the widget type.`, true);
+      }
+      if (problems.usual.length && !await confirmBox('Widget settings', `The ${p.widget.type} widget usually also needs: ${problems.usual.join(', ')}. Without them it may show "API Error". Apply anyway?`, 'Apply anyway')) return;
       const value = kind === 'bookmarks' ? [p] : p;
       const next = {[name.trim()]: value};
       if (isNew) list.push(next); else list[index] = next;
@@ -293,6 +299,28 @@ function select(value, options, onChange, labels = {}) {
 }
 
 // ---- Widget editor: type picker, fields from the docs, visible-field chooser, docs panel ----
+// Most widgets talk to the same server the card links to, so start with the link's origin.
+function withDefaultUrl(w, href) {
+  const def = store.catalog.serviceWidgets.find(x => x.type === w.type);
+  if (w.url || !def?.fields.some(f => f.key === 'url')) return w;
+  try { return {...w, url: new URL(href).origin}; } catch { return w; }
+}
+
+const USUALLY_NEEDED = /^(key|apiKey|password|username|user|token|secret|slug|topic|env)$/;
+
+// Required (url) and usually-needed (non-optional) widget fields that are empty.
+export function widgetProblems(p) {
+  const w = p?.widget;
+  const def = w?.type && store.catalog.serviceWidgets.find(x => x.type === w.type);
+  if (!def) return {missing: [], usual: []};
+  const empty = k => w[k] === undefined || w[k] === '';
+  return {
+    missing: def.fields.filter(f => f.key === 'url' && !f.optional && empty(f.key)).map(f => f.key),
+    // Only credentials/identifiers; the docs also mark things like "custom" or "pool1" as non-optional.
+    usual: def.fields.filter(f => USUALLY_NEEDED.test(f.key) && !f.optional && empty(f.key)).map(f => f.key),
+  };
+}
+
 export function widgetEditor(p, setWidget, serviceName) {
   const catalog = store.catalog;
   let w = p.widget ? clone(p.widget) : null;
@@ -305,7 +333,7 @@ export function widgetEditor(p, setWidget, serviceName) {
       onchange: e => {
         const t = e.target.value.trim();
         const found = catalog.serviceWidgets.find(x => x.type === t || x.title.toLowerCase() === t.toLowerCase());
-        w = t ? {...(w ?? {}), type: found?.type ?? t} : null;
+        w = t ? withDefaultUrl({...(w ?? {}), type: found?.type ?? t}, p.href) : null;
         commit(); draw();
       }});
     const datalist = h('datalist', {id: 'widget-types'}, catalog.serviceWidgets.map(x => h('option', {value: x.type}, x.title)));
@@ -313,7 +341,7 @@ export function widgetEditor(p, setWidget, serviceName) {
     const left = h('div', {},
       h('label', {}, 'Widget type'), typeInput, datalist,
       h('div', {class: 'hint'}, `${catalog.serviceWidgets.length} widget types available. Remove the type to remove the widget.`),
-      suggestion ? h('div', {class: 'suggest-box'}, `Suggested for this service: `, h('button', {class: 'small', onclick: () => { w = {type: suggestion.type}; commit(); draw(); }}, suggestion.title)) : null);
+      suggestion ? h('div', {class: 'suggest-box'}, `Suggested for this service: `, h('button', {class: 'small', onclick: () => { w = withDefaultUrl({type: suggestion.type}, p.href); commit(); draw(); }}, suggestion.title)) : null);
 
     if (def) {
       left.append(h('h3', {}, `${def.title} settings`));
@@ -359,7 +387,10 @@ export function widgetEditor(p, setWidget, serviceName) {
         const i = e.target.previousSibling; i.type = i.type === 'password' ? 'text' : 'password';
       }}, 'show'));
     }
-    return h('div', {}, h('label', {}, f.key, f.optional ? h('span', {class: 'muted'}, ' (optional)') : null), input,
+    const required = f.key === 'url' && !f.optional;
+    const empty = w[f.key] === undefined || w[f.key] === '';
+    return h('div', {}, h('label', {}, f.key, f.optional ? h('span', {class: 'muted'}, ' (optional)') : required ? h('span', {class: 'req'}, ' (required)') : null), input,
+      required && empty ? h('div', {class: 'errors'}, 'Needed: the address Homepage (on granite) uses to reach this app\'s API.') : null,
       f.comment ? h('div', {class: 'hint'}, f.comment) : null);
   }
 
