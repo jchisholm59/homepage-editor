@@ -340,7 +340,12 @@ export function widgetEditor(p, setWidget, serviceName) {
     const suggestion = !w?.type && suggestWidget(catalog, serviceName, p);
     const left = h('div', {},
       h('label', {}, 'Widget type'), typeInput, datalist,
-      h('div', {class: 'hint'}, `${catalog.serviceWidgets.length} widget types available. Remove the type to remove the widget.`),
+      h('div', {class: 'hint'}, `${catalog.serviceWidgets.length} widget types available.`),
+      w?.type ? h('div', {class: 'toolbar', style: 'margin-top:8px'}, h('button', {class: 'danger small', onclick: async () => {
+        if (!await confirmBox('Remove widget', `Remove the ${w.type} widget from this card? (The card itself stays.)`, 'Remove', true)) return;
+        w = null; commit(); draw();
+        toast('Widget removed. Click Apply, then save.');
+      }}, 'Remove widget')) : null,
       suggestion ? h('div', {class: 'suggest-box'}, `Suggested for this service: `, h('button', {class: 'small', onclick: () => { w = withDefaultUrl({type: suggestion.type}, p.href); commit(); draw(); }}, suggestion.title)) : null);
 
     if (def) {
