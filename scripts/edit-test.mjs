@@ -26,4 +26,4 @@ run('change a description', d => { const s = svc(d, 0, 0); s[Object.keys(s)[0]].
 run('move last group to the top', d => d.unshift(d.pop()));
 run('rename a service', d => { const g = group(d, 0); const [k] = Object.keys(g[1]); g[1] = {'Frigate NVR': g[1][k]}; });
 run('delete a service', d => group(d, 0).splice(2, 1));
-run('add a widget', d => { const s = svc(d, 0, 1); s[Object.keys(s)[0]].widget = {type: 'frigate', url: 'http://192.168.2.210:5000'}; });
+run('add a widget', d => { const s = svc(d, 0, 1); s[Object.keys(s)[0]].widget = {type: 'frigate', url: 'http://192.168.1.50:5000'}; });

@@ -20,9 +20,9 @@ export async function localIconsServed() {
 
 export function refreshLocalIcons() { index = null; }
 
-export const LOCAL_ICON_FIX = `In /root/homepage/docker-compose.yml, add this line under the homepage service's "volumes:"
-      - /root/homepage/config/icons:/app/public/icons
-then run:  cd /root/homepage && docker compose up -d`;
+export const LOCAL_ICON_FIX = `In Homepage's own compose file, add this line under its service's "volumes:"
+      - /path/to/your/homepage/config/icons:/app/public/icons
+then run:  docker compose up -d  (from that same folder)`;
 
 // Resolves with the chosen icon reference, or null if cancelled.
 export function pickIcon(current = '', hint = '') {

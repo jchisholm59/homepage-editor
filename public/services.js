@@ -159,7 +159,7 @@ async function checkLinks(kind, model, redraw) {
 
 // ---- Entry editor ---------------------------------------------------------------------------
 const SERVICE_FIELDS = [
-  ['href', 'Link (href)', 'Where clicking the card goes, e.g. http://192.168.2.210:5000'],
+  ['href', 'Link (href)', 'Where clicking the card goes, e.g. http://192.168.1.50:5000'],
   ['description', 'Description', 'Small text under the name'],
 ];
 
@@ -225,7 +225,7 @@ function editEntry(kind, list, index, changed, opts = {}) {
     return h('div', {},
       h('p', {class: 'muted'}, 'Optional health indicators shown on the card.'),
       text('siteMonitor', 'Site monitor URL', 'Homepage checks this URL and shows response time / down status. Usually the same as the link.'),
-      text('ping', 'Ping host', 'Host or IP to ping, e.g. 192.168.2.210 (shows latency).'),
+      text('ping', 'Ping host', 'Host or IP to ping, e.g. 192.168.1.50 (shows latency).'),
       h('div', {class: 'row'},
         h('div', {}, h('label', {}, 'Status style'), select(p.statusStyle, ['', 'dot', 'basic'], v => set('statusStyle', v), {'': 'Default', dot: 'Dot', basic: 'Basic text'}))),
       h('h3', {}, 'Docker'),
@@ -395,7 +395,7 @@ export function widgetEditor(p, setWidget, serviceName) {
     const required = f.key === 'url' && !f.optional;
     const empty = w[f.key] === undefined || w[f.key] === '';
     return h('div', {}, h('label', {}, f.key, f.optional ? h('span', {class: 'muted'}, ' (optional)') : required ? h('span', {class: 'req'}, ' (required)') : null), input,
-      required && empty ? h('div', {class: 'errors'}, 'Needed: the address Homepage (on granite) uses to reach this app\'s API.') : null,
+      required && empty ? h('div', {class: 'errors'}, 'Needed: the address Homepage uses to reach this app\'s API.') : null,
       f.comment ? h('div', {class: 'hint'}, f.comment) : null);
   }
 

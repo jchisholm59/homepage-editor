@@ -158,7 +158,7 @@ export function suggestWidget(catalog, name, props = {}) {
   return fromName;
 }
 function hostWord(href) {
-  try { return new URL(href).hostname.split('.')[0].replace(/-?(cottage|home|local)$/, ''); } catch { return ''; }
+  try { return new URL(href).hostname.split('.')[0].replace(/-?(home|local|lan|internal|remote)$/, ''); } catch { return ''; }
 }
 
 export const clone = v => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));

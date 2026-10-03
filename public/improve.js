@@ -82,7 +82,7 @@ export async function renderImprove(root) {
   });
   add('Icons', 'Broken or missing icons. Your own images live in config/icons and are referenced as /icons/<file>.', iconRows);
   if (served.served === false) sections.lastChild.append(h('div', {class: 'banner'}, h('b', {}, 'One-time fix needed for your own icons: '),
-    'Homepage isn\'t serving config/icons yet, so /icons/… references stay broken until this is done (on granite):', h('pre', {}, LOCAL_ICON_FIX)));
+    'Homepage isn\'t serving config/icons yet, so /icons/… references stay broken until this is done, in Homepage\'s own compose file:', h('pre', {}, LOCAL_ICON_FIX)));
 
   // 1b. Widgets that can't work (missing url) or may not (missing key/login)
   const broken = entries('services').map(e => ({e, pr: widgetProblems(e.props)})).filter(x => x.pr.missing.length || x.pr.usual.length);
@@ -148,7 +148,7 @@ export async function renderImprove(root) {
     h('button', {class: 'small', onclick: () => { store.files['widgets.yaml'].model.unshift({[t]: opts}); markDirty('widgets.yaml'); redraw(); }}, 'Add'))));
 
   // 6. Links
-  add('Links', 'Checks every link from granite. Red = no answer (wrong address, typo, or the service is down).', null,
+  add('Links', 'Checks every link from the editor\'s container. Red = no answer (wrong address, typo, or the service is down).', null,
     h('button', {class: 'small', onclick: async e => {
       e.target.disabled = true; e.target.textContent = 'Checking…';
       const res = await api('/api/check-links', {json: {urls: all.map(x => x.props.href).filter(Boolean)}}).catch(err => (toast(err.message, true), []));

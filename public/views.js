@@ -213,7 +213,7 @@ export async function renderBackups(root) {
     b.files.map(f => h('button', {class: 'ghost small', onclick: () => showBackup(b.id, f, () => renderBackups(root))}, `View ${f}`))));
   root.replaceChildren(
     h('p', {class: 'muted'}, 'A copy of each file is saved here just before every save or restore (the newest 300 are kept). ',
-      'Stored on granite in /root/homepage/editor-backups.'),
+      'Stored in the backups folder mounted at /backups.'),
     rows.length ? h('div', {class: 'list'}, rows) : h('p', {}, 'No backups yet. They appear after your first save.'));
 }
 

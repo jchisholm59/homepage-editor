@@ -11,7 +11,7 @@ import {syncDocument} from './lib/sync.js';
 const PORT = Number(process.env.PORT ?? 7200);
 const CONFIG_DIR = process.env.CONFIG_DIR ?? '/config';
 const BACKUP_DIR = process.env.BACKUP_DIR ?? '/backups';
-const HOMEPAGE_URL = (process.env.HOMEPAGE_URL ?? 'http://192.168.2.210:3000').replace(/\/$/, '');
+const HOMEPAGE_URL = (process.env.HOMEPAGE_URL ?? 'http://homepage:3000').replace(/\/$/, '');
 const PASSWORD = process.env.EDITOR_PASSWORD ?? '';
 // Restart-only Docker API proxy (docker-socket-proxy with POST + ALLOW_RESTARTS), optional.
 const DOCKER_PROXY = (process.env.DOCKER_PROXY ?? '').replace(/\/$/, '');
