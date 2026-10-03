@@ -5,8 +5,11 @@ people who'd rather not hand-edit YAML. It runs in its own container next to Hom
 writes the exact same `config` folder, and gets out of the way the moment you want to drop back
 into the files yourself.
 
+![Homepage, themed from the Appearance tab](docs/images/hero.png)
+
 > Built against Homepage **v1.13.2** (155 service widgets, 12 info widgets — see
-> [Updating the widget catalog](#updating-the-widget-catalog)).
+> [Updating the widget catalog](#updating-the-widget-catalog)). Every screenshot below is a throwaway
+> demo config — nothing in this repo points at anyone's real dashboard.
 
 ## Why
 
@@ -25,6 +28,9 @@ don't need a second tab open to remember what a field does.
   - a tidy layout and theme preset
   - top-bar info widgets
   - dead links, duplicate entries, and API keys sitting in plain text
+
+  ![The Make it better checkup, listing real findings with one-click fixes](docs/images/make-it-better.png)
+
 - **Services / Bookmarks** — cards grouped exactly as they are on the dashboard, with drag-and-drop
   between groups. Each entry gets:
   - an icon picker that searches [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons),
@@ -33,6 +39,16 @@ don't need a second tab open to remember what a field does.
   - a **widget helper** that builds a real form for any of Homepage's service widgets, pulled from
     Homepage's own docs, with those docs shown right beside the form
   - a plain YAML tab for anything the form doesn't cover
+
+  ![The services grid, grouped and drag-and-droppable, with widget suggestions](docs/images/services.png)
+  ![The widget helper: a generated form next to Homepage's own docs for that widget](docs/images/widget-helper.png)
+  ![Searching the icon picker live across Dashboard Icons, selfh.st, Material Design and Simple Icons](docs/images/icon-picker.gif)
+
+- **Appearance** — theme, palette, background image (with blur/saturation/brightness), card and
+  header styles, previewed instantly against your own services before you touch a real file.
+
+  ![Cycling palettes, a background image and card blur, all updating live](docs/images/appearance.gif)
+
 - **Info widgets** and a **Settings explorer** — every documented option, with a "Use this" button
   on every example from the docs
 - **Files** tab for anything else, as plain text
@@ -42,6 +58,8 @@ don't need a second tab open to remember what a field does.
   - every save shows you a diff first
   - invalid YAML is refused, and so is a save if the file changed underneath you since you opened it
   - a backup is written before every save, restorable from the Backups tab
+
+  ![Reviewing a diff before it's written to disk](docs/images/diff-review.png)
 
 ## Quick start
 

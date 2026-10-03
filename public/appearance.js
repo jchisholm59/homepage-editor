@@ -147,13 +147,17 @@ function drawMock(el, s) {
     return h('div', {class: 'm-head underlined', style: `color:${text};border-color:${sub}`}, name);
   };
   el.style.backgroundColor = `rgb(${bgColor})`;
+  // replaceChildren() stringifies a bare null into a "null" text node (unlike h()'s own child
+  // filtering), so the optional background layer has to be filtered out of the list, not passed in.
   el.replaceChildren(
-    b.image ? h('div', {class: 'm-bg', style: `background-image: linear-gradient(rgb(${bgColor} / ${overlay}), rgb(${bgColor} / ${overlay})), url('${iconUrl(b.image) ?? b.image}')`}) : null,
-    h('div', {class: 'm-inner', style: `backdrop-filter:${filters};-webkit-backdrop-filter:${filters}`},
+    ...[
+      b.image ? h('div', {class: 'm-bg', style: `background-image: linear-gradient(rgb(${bgColor} / ${overlay}), rgb(${bgColor} / ${overlay})), url('${iconUrl(b.image) ?? b.image}')`}) : null,
+      h('div', {class: 'm-inner', style: `backdrop-filter:${filters};-webkit-backdrop-filter:${filters}`},
       h('div', {class: `m-widgets${header === 'boxedWidgets' ? ' boxed' : ''}`, style: `color:${text};${header === 'boxedWidgets' ? `background:${cardBg}` : ''}`},
         h('span', {style: 'font-size:18px;font-weight:600'}, s.title || 'Homepage'), h('span', {class: 'spacer'}),
         h('span', {style: `color:${sub}`}, new Date().toLocaleString([], {dateStyle: 'medium', timeStyle: 'short'}))),
-      groups.map(g => h('div', {class: 'm-group'}, groupHead(g.name), h('div', {class: 'm-cards'}, g.items.map(card))))));
+      groups.map(g => h('div', {class: 'm-group'}, groupHead(g.name), h('div', {class: 'm-cards'}, g.items.map(card))))),
+    ].filter(Boolean));
 }
 
 // ---- Small controls ------------------------------------------------------------------------

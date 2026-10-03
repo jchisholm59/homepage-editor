@@ -268,7 +268,9 @@ function editEntry(kind, list, index, changed, opts = {}) {
   }
 
   m.body.append(tabsEl, pane);
-  m.foot.append(
+  // .append() stringifies a bare null into a "null" text node (unlike h()'s own child filtering),
+  // so the optional Delete button has to be filtered out of the list, not passed in directly.
+  m.foot.append(...[
     isNew ? null : h('button', {class: 'danger', onclick: async () => {
       if (!await confirmBox('Delete', `Delete "${name}"?`, 'Delete', true)) return;
       list.splice(index, 1); m.close(); changed();
@@ -288,7 +290,8 @@ function editEntry(kind, list, index, changed, opts = {}) {
       const next = {[name.trim()]: value};
       if (isNew) list.push(next); else list[index] = next;
       m.close(); changed();
-    }}, isNew ? 'Add' : 'Apply'));
+    }}, isNew ? 'Add' : 'Apply'),
+  ].filter(Boolean));
   if (opts.widget && kind === 'services') { p.widget ??= {type: opts.widget}; show('widget'); }
   else show('basics');
 }
