@@ -65,13 +65,16 @@ don't need a second tab open to remember what a field does.
 
 Homepage Editor runs as its own container, pointed at the same config folder Homepage uses.
 
-1. Clone this repo, then edit the `compose.yaml` it ships with (or copy the one below) so the two
-   volume lines point at your own Homepage config:
+1. Either clone this repo and edit the `compose.yaml` it ships with (run it from inside the clone: it builds
+   from the `Dockerfile` next to it), or save the one below anywhere you like (it builds straight from this
+   GitHub repo, so it doesn't need a clone). Either way, point the two volume lines at your own Homepage config:
 
    ```yaml
    services:
      homepage-editor:
-       build: .
+       # Builds from GitHub, so this file works in any folder. (The compose.yaml in the repo uses
+       # `build: .` instead, and must be run from inside the clone.)
+       build: https://github.com/jchisholm59/homepage-editor.git#main
        container_name: homepage-editor
        restart: unless-stopped
        ports:
